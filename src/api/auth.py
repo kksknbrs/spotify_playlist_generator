@@ -1,5 +1,8 @@
-import sys
-from src import app
+"""
+    auth.py
+    認証関連
+"""
+from src import app, utils
 from requests_oauthlib import OAuth2Session
 from flask import redirect, request, session, url_for
 import json
@@ -41,7 +44,7 @@ def checkStoredAccessToken():
     
 # リフレッシュトークンを取得する
 def getRefreshToen(refresh_token):
-    print(refresh_token, file=sys.stdout)
+    utils.printStdOut(refresh_token)
     oauth = OAuth2Session(client_id=app.config["CLIENT_ID"])
                         
     token = oauth.refresh_token(
@@ -96,15 +99,15 @@ def requestAccessToken():
 
 @app.route('/profile')
 def getMyProfile():
-    access_token = getAccessToken(session.get("user_id"))
-    d = {}
-    d["access_token"] = access_token
-
-    oauth2 = OAuth2Session(token=d)
+    oauth2 = getOAuth2Session(session.get("user_id"))
 
     me = oauth2.request("GET", "https://api.spotify.com/v1/me")
     text = me.text
     return text
+
+def getOAuth2Session(user_id):
+    access_token = getAccessToken(user_id)
+    return OAuth2Session(token={"access_token": access_token})
 
 def getAccessToken(user_id):
     query = AccessToken.select() \
@@ -115,6 +118,3 @@ def getAccessToken(user_id):
 
     return query[0].access_token
 
-# デバッグ用。コンソールにprintする。
-def printStdOut(a):
-    print(a, file=sys.stdout)
