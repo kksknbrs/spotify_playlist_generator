@@ -1,6 +1,6 @@
 from peewee import *
 
-db = PostgresqlDatabase(database='image2list',
+db = PostgresqlDatabase(database='spotify_list_gen',
                         user='root',
                         password='root',
                         host='0.0.0.0',
