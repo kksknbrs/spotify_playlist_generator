@@ -10,9 +10,9 @@ from src.models import AccessToken
 import time
 
 @app.route('/')
+def checkStoredAccessToken():
 # DBにアクセストークンが格納されているか確認
 # 格納されているアクセストークンは失効していないか確認
-def checkStoredAccessToken():
     user_id = session.get("user_id")
     # cookieにユーザーIDの値が格納されてなければ認可を行う
     if user_id == "None":
@@ -51,7 +51,8 @@ def getRefreshToen(refresh_token):
         token_url=app.config["REQUEST_ACCESS_TOKEN_URI"], \
         refresh_token=refresh_token, \
         client_id=app.config["CLIENT_ID"], \
-        client_secret=app.config["CLIENT_SECRET"])
+        client_secret=app.config["CLIENT_SECRET"]
+    )
 
     return token 
 
@@ -59,7 +60,9 @@ def getRefreshToen(refresh_token):
 def getAuthorizationUrl():
     oauth = OAuth2Session(
         client_id=app.config['CLIENT_ID'],
-        redirect_uri=app.config['REDIRECT_URI'])
+        redirect_uri=app.config['REDIRECT_URI'],
+        scope="playlist-modify-private playlist-modify-public"
+        )
     authorization_url, state = oauth.authorization_url(
         app.config['REQUEST_AUTHORIZATION_URI'])
 
@@ -70,7 +73,10 @@ def getAuthorizationUrl():
 def requestAccessToken():
     code = request.args.get("code")
     oauth = OAuth2Session(client_id=app.config['CLIENT_ID'],
-                            redirect_uri=app.config['REDIRECT_URI'])
+                            redirect_uri=app.config['REDIRECT_URI'],
+                            scope="playlist-modify-private playlist-modify-public"
+                            )
+
     # TODO: キャンセルされた時の処理を追加しよう
 
     # アクセストークンを取得
@@ -103,11 +109,14 @@ def getMyProfile():
 
     me = oauth2.request("GET", "https://api.spotify.com/v1/me")
     text = me.text
-    return text
+    #return text
+    return session.get("user_id")
 
 def getOAuth2Session(user_id):
     access_token = getAccessToken(user_id)
-    return OAuth2Session(token={"access_token": access_token})
+    return OAuth2Session(token={"access_token": access_token},
+                        scope="playlist-modify-private playlist-modify-public"
+                        )
 
 def getAccessToken(user_id):
     query = AccessToken.select() \

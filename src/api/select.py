@@ -50,6 +50,17 @@ def getSearchResult():
 
     return jsonify(result)
 
-@app.route('/playlist', methods=["POST"])
+@app.route('/playlist', methods=["GET"])
 def createPlayList():
-    pass
+    oauth2 = auth.getOAuth2Session(session.get("user_id"))
+    CREATE_PLAYLIST_URI = app.config["CREATE_PLAYLIST_URI1"] \
+                        + session.get("user_id") \
+                        + app.config["CREATE_PLAYLIST_URI2"]
+
+    data = {"name": "test", "public": "false"}
+    headers = {'content-type': 'application/json'}
+    response_raw = oauth2.post(CREATE_PLAYLIST_URI, data=json.dumps(data), headers=headers)
+
+    # TODO: 同じ名前のプレイリストが既に存在していれば、プレイリストを作らせない
+
+    return response_raw.text
