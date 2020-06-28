@@ -61,7 +61,7 @@ def getAuthorizationUrl():
     oauth = OAuth2Session(
         client_id=app.config['CLIENT_ID'],
         redirect_uri=app.config['REDIRECT_URI'],
-        scope="playlist-modify-private playlist-modify-public"
+        scope=app.config['SCOPE']
         )
     authorization_url, state = oauth.authorization_url(
         app.config['REQUEST_AUTHORIZATION_URI'])
@@ -74,7 +74,7 @@ def requestAccessToken():
     code = request.args.get("code")
     oauth = OAuth2Session(client_id=app.config['CLIENT_ID'],
                             redirect_uri=app.config['REDIRECT_URI'],
-                            scope="playlist-modify-private playlist-modify-public"
+                            scope=app.config['SCOPE']
                             )
 
     # TODO: キャンセルされた時の処理を追加しよう
@@ -109,13 +109,12 @@ def getMyProfile():
 
     me = oauth2.request("GET", "https://api.spotify.com/v1/me")
     text = me.text
-    #return text
-    return session.get("user_id")
+    return text
 
 def getOAuth2Session(user_id):
     access_token = getAccessToken(user_id)
     return OAuth2Session(token={"access_token": access_token},
-                        scope="playlist-modify-private playlist-modify-public"
+                        scope=app.config['SCOPE']
                         )
 
 def getAccessToken(user_id):

@@ -51,16 +51,79 @@ def getSearchResult():
     return jsonify(result)
 
 @app.route('/playlist', methods=["GET"])
-def createPlayList():
+def createAndAddPlayList():
+    """
+    プレイリストを作成し、選択した曲を作成したプレイリストに追加
+    プレイリストのURL,IDを返す
+    """
+    # TODO: POSTにして、下記の二変数をbodyから受け取るようにする
+    playlist_name = "test4"
+    track_uris = ["spotify:track:4iV5W9uYEdYUVa79Axb7Rh","spotify:track:1301WleyT98MSxVHPZCA6M", "spotify:episode:512ojhOuo1ktJprKbVcKyQ"]
+
     oauth2 = auth.getOAuth2Session(session.get("user_id"))
+
+    # 登録しようとしているプレイリストの名前がダブっていたら
+    # TODO: 何かする?(警告でも返す?)
+    if isDoubledPlaylistName(oauth2, playlist_name):
+        pass
+
+    # プレイリストを作成
+    external_url, playlist_id = createPlaylist(oauth2, playlist_name)
+
+    # プレイリストにトラックを追加
+    addToPlaylist(oauth2, playlist_id, track_uris)
+
+    return jsonify({"external_url":external_url, "playlist_id": playlist_id})
+
+def addToPlaylist(oauth2, playlist_id,track_uris):
+    """
+    プレイリストにトラックを追加する
+    track_urisはsptify uriのリスト
+    成功したら(201)、Trueを返す
+    """
+    ADD_PLAYLIST_URI = app.config["ADD_PLAYLIST_URI1"] \
+                        + playlist_id \
+                        + app.config["ADD_PLAYLIST_URI2"]
+    
+    data = {"uris": track_uris}
+    response_raw = oauth2.post(ADD_PLAYLIST_URI, data=json.dumps(data))
+
+    if response_raw.status_code == "201": # created
+        return True
+    else:
+        return False
+
+def createPlaylist(oauth2,playlist_name):
+    """
+    プレイリストを作成
+    プレイリストのURLとidを返す
+    """
     CREATE_PLAYLIST_URI = app.config["CREATE_PLAYLIST_URI1"] \
                         + session.get("user_id") \
                         + app.config["CREATE_PLAYLIST_URI2"]
 
-    data = {"name": "test", "public": "false"}
+    data = {"name": playlist_name, "public": "false"}
     headers = {'content-type': 'application/json'}
     response_raw = oauth2.post(CREATE_PLAYLIST_URI, data=json.dumps(data), headers=headers)
+    response = response_raw.json()
 
-    # TODO: 同じ名前のプレイリストが既に存在していれば、プレイリストを作らせない
+    return response["external_urls"]["spotify"], response["id"]
 
-    return response_raw.text
+def isDoubledPlaylistName(oauth2, playlist_name):
+    """
+    playlistNameと同じ名前を持ったプレイリストが既に存在するかどうか
+    """
+    return playlist_name in getPlaylistNames(oauth2)
+
+def getPlaylistNames(oauth2):
+    """
+    存在するプレイリストの名前のリストを返す
+    """
+    response_raw = oauth2.get(app.config['GET_MY_PLAYLIST_URI'])
+    response = response_raw.json()
+    items = response["items"]
+    existing_playlist_names = list(map(lambda item: item["name"], items))
+
+    return existing_playlist_names
+
+
