@@ -1,4 +1,4 @@
-src/config.py
+api/src/config.py
+api/src/api/sample
 .vscode
-src/api/sample
 
