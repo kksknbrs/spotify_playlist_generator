@@ -12,6 +12,9 @@ from src.api import auth
 import requests
 from urllib.parse import quote
 import json
+@app.route('/test', methods=["GET"])
+def test():
+    return "test"
 
 @app.route('/search', methods=["GET"])
 def getSearchResult():

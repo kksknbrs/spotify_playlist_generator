@@ -6,6 +6,7 @@ import Form from 'react-bootstrap/Form';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
+import Button from 'react-bootstrap/Button';
 
 // artist nameとtrack nameの入力/出力蘭。一曲分。
 class List extends React.Component {
@@ -15,20 +16,38 @@ class List extends React.Component {
         <Row>
           <Col xs={1}>{this.props.rowNum}</Col>
           <Col>
+          {/* artist name */}
             <Form.Control 
               type="text" 
               value={this.props.artistName}
-              onChange={(e) => this.props.onChange(this.props.rowNum-1, e.target.value)}
+              onChange={(e) => this.props.onChange_artist(this.props.rowNum-1, e.target.value)}
             />
           </Col>
-          <Col><Form.Control type="text" /></Col>
+          <Col>
+          {/* track name */}
+            <Form.Control 
+              type="text"
+              value={this.props.trackName}
+              onChange={(e) => this.props.onChange_track(this.props.rowNum-1, e.target.value)}
+            />
+          </Col>
+          <Col>
+          {/* Search button */}
+            <Button 
+              variant="primary" 
+              type="button"  
+              onClick={() => this.props.onClick_button(this.props.rowNum-1)}
+              size="sm">
+                Search
+            </Button>
+          </Col>
         </Row>
       </Container>
     )
   }
 }
 
-// 全曲分のartist name、
+// 全曲分のartist name
 class ListsContainer extends React.Component {
   constructor(props) {
     super(props);
@@ -39,12 +58,42 @@ class ListsContainer extends React.Component {
   }
 
   handleArtistName(rowNum, newArtistName) {
-      const newArtistNames = this.state.artistNames;
-      newArtistNames[rowNum] = newArtistName;
+    const newArtistNames = this.state.artistNames;
+    newArtistNames[rowNum] = newArtistName;
 
     this.setState({
       artistName: newArtistName,
     });
+  }
+
+  handleTrackName(rowNum, newTrackName) {
+    const newTrackNames = this.state.trackNames
+    newTrackNames[rowNum] = newTrackName;
+
+    this.setState({
+      trackNames: newTrackNames,
+    });
+  }
+
+  handleButton(rowNum) {
+    const artistName = this.state.artistNames[rowNum];
+    const trackName = this.state.trackNames[rowNum];
+    if (artistName || trackName) {
+      // 両方が空欄である時は検索させない
+      const request = new XMLHttpRequest();
+      const URL = "http://127.0.0.1:5000/search?"
+                  + "artist="
+                  + artistName
+                  + "&track="
+                  + trackName;
+
+      request.open('GET', URL, true);
+      request.onload = function() {
+        const data = this.response;
+        console.log(data)
+      };
+      request.send();
+    }
   }
 
   render() {
@@ -55,7 +104,9 @@ class ListsContainer extends React.Component {
           key={i}
           rowNum={i+1}
           artistName={this.state.artistNames[i]}
-          onChange={this.handleArtistName.bind(this)}
+          onChange_artist={this.handleArtistName.bind(this)}
+          onChange_track={this.handleTrackName.bind(this)}
+          onClick_button={this.handleButton.bind(this)}
         />
       )
     });
@@ -69,6 +120,7 @@ class ListsContainer extends React.Component {
               <Col xs={1}></Col>
               <Col>Artist Name</Col>
               <Col>Track Name</Col>
+              <Col></Col>
             </Row>
           </Container>
           {lists}

@@ -13,4 +13,6 @@ CREATE_PLAYLIST_URI2 = "/playlists"
 ADD_PLAYLIST_URI1 = "https://api.spotify.com/v1/playlists/"
 ADD_PLAYLIST_URI2 = "/tracks"
 
+SCOPE="playlist-modify-public playlist-modify-private playlist-read-private"
+
 SECRET_KEY = ""
